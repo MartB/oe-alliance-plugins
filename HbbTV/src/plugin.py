@@ -10,6 +10,7 @@ from Components.ActionMap import ActionMap
 from Components.Language import language
 from Components.ServiceEventTracker import ServiceEventTracker
 from Components.VolumeControl import VolumeControl
+from Components.HdmiCec import HdmiCec
 
 from enigma import eTimer, fbClass, eRCInput, iServiceInformation, iPlayableService
 
@@ -139,6 +140,9 @@ class VBHandler(VBHandlers):
 		return (True, data)
 
 	def _CB_CONTROL_SET_VOLUME(self, result, packet):
+		if (HdmiCec.hdmi_cec.volumeForwardingEnabled):
+			return (True, None)
+		
 		if self.max_volume < 0:
 			self.max_volume = VolumeControl.instance.volctrl.getVolume()
 		self.soft_volume = int(packet)
@@ -150,11 +154,21 @@ class VBHandler(VBHandlers):
 		return (True, None)
 
 	def _CB_CONTROL_VOLUME_UP(self, result, packet):
-		self.set_volume(5)
+		if (not HdmiCec.hdmi_cec.volumeForwardingEnabled):
+			self.set_volume(5)
+		else:
+			HdmiCec.hdmi_cec.keyEvent(115,0)
+			HdmiCec.hdmi_cec.keyEvent(115,1)
+
 		return (True, None)
 
 	def _CB_CONTROL_VOLUME_DOWN(self, result, packet):
-		self.set_volume(-5)
+		if (not HdmiCec.hdmi_cec.volumeForwardingEnabled):
+			self.set_volume(-5)
+		else:
+			HdmiCec.hdmi_cec.keyEvent(114,0)
+			HdmiCec.hdmi_cec.keyEvent(114,1)
+		
 		return (True, None)
 
 	def _CB_BROWSER_MENU_OPEN(self, result, packet):
